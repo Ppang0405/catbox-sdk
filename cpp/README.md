@@ -182,8 +182,8 @@ cmake -S . -B build -DCMAKE_BUILD_TYPE=Release "-DCMAKE_OSX_ARCHITECTURES=arm64;
 
 The binary links libcurl and the C++ standard library dynamically, so it is small: a stripped
 release build is about 475 KB on macOS arm64 (Apple Clang 21; about 1 MB universal) and about
-450 KB on Linux aarch64 (GCC 13). Most of that is the CLI11 parser: a program that uses only the
+450 KB on Linux aarch64 (GCC 13); `catbox.exe` is about 625 KB with MSVC 19.51. Most of that is the CLI11 parser: a program that uses only the
 library comes to about 60 KB stripped on macOS. On Linux it needs the distribution's libcurl at run time
-(`libcurl4` on Debian and Ubuntu); on Windows, ship `libcurl.dll` and `zlib1.dll` from vcpkg next
+(`libcurl4` on Debian and Ubuntu); on Windows, ship `libcurl.dll` and `z.dll` from vcpkg next
 to `catbox.exe` (the vcpkg toolchain copies them into the build directory). When targeting macOS
 older than 13.3, note that `std::format` of floating-point values needs that deployment target.

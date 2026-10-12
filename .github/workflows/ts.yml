@@ -1,0 +1,47 @@
+name: TypeScript
+
+on:
+  push:
+    branches: [ "main" ]
+    paths: [ "ts/**", "conformance/**", ".github/workflows/ts.yml" ]
+  pull_request:
+    paths: [ "ts/**", "conformance/**", ".github/workflows/ts.yml" ]
+
+defaults:
+  run:
+    working-directory: ts
+    shell: bash
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: oven-sh/setup-bun@v2
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+    - name: Install dependencies
+      run: bun install --frozen-lockfile
+    - name: Type-check
+      run: bun run typecheck
+    - name: Unit tests
+      run: bun test
+    - name: Build single-file executable
+      run: |
+        bun run build
+        ls -l dist
+    - name: Conformance tests (compiled binary)
+      run: |
+        binary=ts/dist/catbox
+        if [ "$RUNNER_OS" = "Windows" ]; then binary='ts\dist\catbox.exe'; fi
+        python conformance/run.py -- "$binary"
+      working-directory: .
+    - name: Conformance tests (bun src/cli.ts)
+      run: python conformance/run.py -- bun ts/src/cli.ts
+      working-directory: .

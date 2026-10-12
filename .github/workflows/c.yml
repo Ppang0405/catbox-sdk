@@ -1,0 +1,63 @@
+name: C
+
+on:
+  push:
+    branches: [ "main" ]
+    paths: [ "c/**", "conformance/**", ".github/workflows/c.yml" ]
+  pull_request:
+    paths: [ "c/**", "conformance/**", ".github/workflows/c.yml" ]
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  test:
+    name: test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            binary: c/build/bin/catbox
+          - os: macos-latest
+            binary: c/build/bin/catbox
+          # Visual Studio is a multi-config generator, so outputs go under Release/.
+          - os: windows-latest
+            binary: c/build/bin/Release/catbox.exe
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install libcurl (Linux)
+      if: runner.os == 'Linux'
+      run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev
+
+    # macOS uses the system libcurl from the SDK.
+
+    - name: Install libcurl (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        vcpkg install curl:x64-windows
+        # The vcpkg toolchain copies the curl DLLs next to each executable it builds.
+        echo "VCPKG_TOOLCHAIN=$(cygpath -m "$VCPKG_INSTALLATION_ROOT")/scripts/buildsystems/vcpkg.cmake" >> "$GITHUB_ENV"
+
+    - name: Configure
+      run: >
+        cmake -S c -B c/build -DCMAKE_BUILD_TYPE=Release -DCATBOX_WARNINGS_AS_ERRORS=ON
+        ${VCPKG_TOOLCHAIN:+"-DCMAKE_TOOLCHAIN_FILE=$VCPKG_TOOLCHAIN"}
+
+    - name: Build
+      run: cmake --build c/build --config Release
+
+    - name: Unit tests
+      run: ctest --test-dir c/build -C Release --output-on-failure
+
+    - name: Conformance tests
+      run: |
+        if [ "$RUNNER_OS" = Windows ]; then python=python; else python=python3; fi
+        "$python" conformance/run.py -- "${{ matrix.binary }}"
+
+    - name: Binary size
+      run: ls -l "${{ matrix.binary }}"

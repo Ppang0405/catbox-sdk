@@ -128,11 +128,12 @@ The release profile in `Cargo.toml` optimizes for size (`opt-level = "z"`, `lto 
 | macOS arm64, + `lto`, `codegen-units = 1` | 2.0 MB |
 | macOS arm64, + `opt-level = "z"`, `panic = "abort"` (the committed profile) | **1.3 MB** (1,319,152 bytes) |
 | Linux aarch64, static musl, committed profile | **1.6 MB** (1,577,352 bytes) |
+| Linux x86_64 (glibc, GitHub `ubuntu-latest`), committed profile | 1.8 MB (1,779,504 bytes) |
+| Windows x86_64 (MSVC, GitHub `windows-latest`), committed profile | 1.5 MB (1,459,200 bytes) |
 
 Uploading a 256 MB file to the local mock server took the same time (about 0.2 s) with every
 profile, so the smaller one costs nothing noticeable: uploads are network-bound and the crypto
-in `ring` is assembly either way. The CI workflow prints the size of the Linux, macOS and Windows
-binaries it builds.
+in `ring` is assembly either way. The CI workflow prints the size of each binary it builds.
 
 ```bash
 # macOS universal binary (arm64 + x86_64); depends only on system libraries

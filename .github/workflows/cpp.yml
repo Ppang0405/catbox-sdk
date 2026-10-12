@@ -1,0 +1,55 @@
+name: C++
+
+on:
+  push:
+    branches: [ "main" ]
+    paths: [ "cpp/**", "conformance/**", ".github/workflows/cpp.yml" ]
+  pull_request:
+    paths: [ "cpp/**", "conformance/**", ".github/workflows/cpp.yml" ]
+
+jobs:
+  test:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.13"
+
+    - name: Install libcurl (Linux)
+      if: runner.os == 'Linux'
+      run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev
+    - name: Install libcurl (Windows)
+      if: runner.os == 'Windows'
+      run: vcpkg install curl:x64-windows
+
+    - name: Configure (Linux, macOS)
+      if: runner.os != 'Windows'
+      run: cmake -S cpp -B cpp/build -DCMAKE_BUILD_TYPE=Release -DCATBOX_WARNINGS_AS_ERRORS=ON
+    - name: Configure (Windows)
+      if: runner.os == 'Windows'
+      # The vcpkg toolchain also copies libcurl's DLLs next to each executable it builds.
+      run: >
+        cmake -S cpp -B cpp/build -DCATBOX_WARNINGS_AS_ERRORS=ON
+        -DVCPKG_TARGET_TRIPLET=x64-windows
+        "-DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
+
+    - name: Build
+      run: cmake --build cpp/build --config Release --parallel
+    - name: Unit tests
+      run: ctest --test-dir cpp/build -C Release --output-on-failure
+
+    - name: Conformance tests (Linux, macOS)
+      if: runner.os != 'Windows'
+      run: python3 conformance/run.py -- cpp/build/catbox
+    - name: Conformance tests (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        Get-ChildItem cpp\build\Release
+        python conformance\run.py -- cpp\build\Release\catbox.exe

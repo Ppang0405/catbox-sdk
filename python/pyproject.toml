@@ -1,8 +1,9 @@
 [tool.poetry]
 name = "catbox-sdk"
 version = "0.1.0"
-description = ""
+description = "Upload files to catbox.moe and litterbox, as a library or the `catbox` command"
 authors = ["jeremy <nguyentruong.xyz0405@gmail.com>"]
+license = "MIT"
 readme = "README.md"
 
 [tool.poetry.dependencies]
@@ -10,6 +11,8 @@ python = "^3.12"
 requests-toolbelt = "^1.0.0"
 requests = "^2.32.3"
 
+[tool.poetry.scripts]
+catbox = "catbox_sdk.cli:main"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.4"

@@ -1,0 +1,40 @@
+name: Python
+
+on:
+  push:
+    branches: [ "main" ]
+    paths: [ "python/**", "conformance/**", ".github/workflows/python.yml" ]
+  pull_request:
+    branches: [ "main" ]
+    paths: [ "python/**", "conformance/**", ".github/workflows/python.yml" ]
+
+defaults:
+  run:
+    working-directory: python
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        python-version: [ "3.12", "3.13" ]
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        pipx install poetry
+        poetry env use python
+        poetry install
+        poetry run pip install flake8
+    - name: Lint with flake8
+      run: poetry run flake8 . ../conformance --count --max-line-length=127 --show-source --statistics
+    - name: Unit tests
+      run: poetry run pytest
+    - name: Conformance tests
+      run: python ../conformance/run.py -- poetry run catbox

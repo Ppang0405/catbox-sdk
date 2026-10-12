@@ -1,0 +1,31 @@
+{
+  "name": "catbox-sdk",
+  "version": "0.1.0",
+  "description": "Upload files to catbox.moe and litterbox.catbox.moe, as a library or with the catbox command",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ppang0405/catbox-sdk.git",
+    "directory": "ts"
+  },
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "bin": {
+    "catbox": "./src/cli.ts"
+  },
+  "files": [
+    "src"
+  ],
+  "scripts": {
+    "catbox": "bun src/cli.ts",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "build": "bun build src/cli.ts --compile --minify --outfile dist/catbox"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.4.3",
+    "typescript": "^7.0.2"
+  }
+}

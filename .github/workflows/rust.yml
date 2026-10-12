@@ -1,0 +1,45 @@
+name: Rust
+
+on:
+  push:
+    branches: [ "main" ]
+    paths: [ "rust/**", "conformance/**", ".github/workflows/rust.yml" ]
+  pull_request:
+    paths: [ "rust/**", "conformance/**", ".github/workflows/rust.yml" ]
+
+defaults:
+  run:
+    working-directory: rust
+    shell: bash
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        components: rustfmt, clippy
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+    - name: Format
+      run: cargo fmt --check
+    - name: Clippy
+      run: cargo clippy --locked --all-targets -- -D warnings
+    - name: Unit tests
+      run: cargo test --locked
+    - name: Release build
+      run: cargo build --release --locked
+    - name: Binary size
+      run: ls -l target/release/catbox${{ runner.os == 'Windows' && '.exe' || '' }}
+    - name: Conformance tests
+      run: python ../conformance/run.py -- target/release/catbox${{ runner.os == 'Windows' && '.exe' || '' }}

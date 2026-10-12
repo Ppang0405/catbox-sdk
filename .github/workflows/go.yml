@@ -1,0 +1,49 @@
+name: Go
+
+on:
+  push:
+    branches: [ "main" ]
+    paths: [ "go/**", "conformance/**", ".github/workflows/go.yml" ]
+  pull_request:
+    paths: [ "go/**", "conformance/**", ".github/workflows/go.yml" ]
+
+defaults:
+  run:
+    shell: bash
+    working-directory: go
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, macos-latest, windows-latest ]
+        go-version: [ stable ]
+        include:
+          # The oldest Go that go.mod allows.
+          - os: ubuntu-latest
+            go-version: "1.22"
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-go@v5
+      with:
+        go-version: ${{ matrix.go-version }}
+        cache: false  # no dependencies to cache
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+    - name: Check formatting
+      # Windows checkouts may have CRLF line endings, which gofmt would flag.
+      if: runner.os != 'Windows'
+      run: test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
+    - name: Vet
+      run: go vet ./...
+    - name: Unit tests
+      run: go test ./...
+    - name: Build
+      run: go build -o bin/ ./cmd/catbox
+    - name: Conformance tests
+      working-directory: .
+      run: python conformance/run.py -- "go/bin/catbox${{ runner.os == 'Windows' && '.exe' || '' }}"

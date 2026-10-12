@@ -198,6 +198,8 @@ Measured sizes of the `catbox` binary:
 | macOS arm64, Release, against the system libcurl | 36 KB stripped |
 | macOS universal (arm64 + x86_64), MinSizeRel | 69 KB stripped |
 | Linux aarch64 (Ubuntu 24.04, gcc 13), Release, dynamic libcurl | 67 KB stripped |
+| Linux x86_64 (GitHub `ubuntu-latest`, gcc), Release, dynamic libcurl | 36 KB unstripped |
+| Windows x64 (GitHub `windows-latest`, MSVC), Release, plus the vcpkg curl DLLs | 25 KB |
 | Linux aarch64 (Alpine, musl), fully static with libcurl + OpenSSL | 7.2 MB stripped, 3.4 MB gzipped |
 
 The dynamic builds are tiny because libcurl does the HTTP and TLS work and ships with the OS

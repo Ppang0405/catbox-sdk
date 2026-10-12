@@ -1,0 +1,44 @@
+name: Zig
+
+on:
+  push:
+    branches: [ "main" ]
+    paths: [ "zig/**", "conformance/**", ".github/workflows/zig.yml" ]
+  pull_request:
+    paths: [ "zig/**", "conformance/**", ".github/workflows/zig.yml" ]
+
+defaults:
+  run:
+    working-directory: zig
+    shell: bash
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python: python3
+            binary: zig-out/bin/catbox
+          - os: macos-latest
+            python: python3
+            binary: zig-out/bin/catbox
+          - os: windows-latest
+            python: python
+            binary: zig-out\bin\catbox.exe
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: mlugg/setup-zig@v2
+      with:
+        version: 0.17.0
+    - name: Check formatting
+      run: zig fmt --check .
+    - name: Unit tests
+      run: zig build test --summary all
+    - name: Build
+      run: zig build
+    - name: Conformance tests
+      run: ${{ matrix.python }} ../conformance/run.py -- '${{ matrix.binary }}'

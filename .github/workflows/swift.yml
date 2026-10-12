@@ -1,0 +1,43 @@
+name: Swift
+
+on:
+  push:
+    branches: [ "main" ]
+    paths: [ "swift/**", ".github/workflows/swift.yml" ]
+  pull_request:
+    branches: [ "main" ]
+    paths: [ "swift/**", ".github/workflows/swift.yml" ]
+
+defaults:
+  run:
+    working-directory: swift
+
+jobs:
+  macos:
+    runs-on: macos-15
+    steps:
+    - uses: actions/checkout@v4
+    - run: swift --version
+    - run: swift build
+    - run: swift test
+
+  linux:
+    runs-on: ubuntu-latest
+    container: swift:6.1-noble
+    steps:
+    - uses: actions/checkout@v4
+    - run: swift --version
+    - run: swift build
+    - run: swift test
+
+  windows:
+    runs-on: windows-latest
+    steps:
+    - uses: compnerd/gha-setup-swift@main
+      with:
+        branch: swift-6.1-release
+        tag: 6.1-RELEASE
+    - uses: actions/checkout@v4
+    - run: swift --version
+    - run: swift build
+    - run: swift test
